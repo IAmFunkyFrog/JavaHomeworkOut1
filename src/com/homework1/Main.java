@@ -21,6 +21,27 @@ public class Main {
         }
     }
 
+    private static void printInfoFor(Stream<Customer> suitable_customers) {
+        int suitable_customers_count = suitable_customers.map(x -> 1).reduce(Integer::sum).orElse(0);
+        int middle_age = suitable_customers
+                .map(Customer::getAge)
+                .reduce(Integer::sum)
+                .orElse(-1) / suitable_customers_count;
+        int middle_income = suitable_customers
+                .map(Customer::getIncome)
+                .reduce(Integer::sum)
+                .orElse(-1) / suitable_customers_count;
+        int max_income = suitable_customers
+                .map(Customer::getIncome)
+                .reduce(Integer::max)
+                .orElse(-1);
+
+        System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers_count));
+        System.out.println("Средний возвраст " + String.valueOf(middle_age));
+        System.out.println("Средний доход " + String.valueOf(middle_income));
+        System.out.println("Максимальный доход " + String.valueOf(max_income));
+    }
+
     public static void main(String[] args) {
 	    int age_from = Arrays.stream(args)
                 .filter(str -> str.startsWith("--from="))
@@ -60,31 +81,12 @@ public class Main {
             e.printStackTrace();
         }
 
-        Stream<Customer> suitable_customers = customerList.stream()
+        Stream<Customer> suitable_customers_by_age = customerList.stream()
                 .filter(customer -> customer.getAge() > age_from && customer.getAge() < age_to);
-        int suitable_customers_count = suitable_customers.map(customer -> 1).reduce(Integer::sum).orElse(0);
 
-        if(suitable_customers_count == 0) {
-            System.out.println("Не найдено подходящих покупателей");
-        }
-        else {
-            int middle_age = suitable_customers
-                    .map(Customer::getAge)
-                    .reduce(Integer::sum)
-                    .orElse(-1) / suitable_customers_count;
-            int middle_income = suitable_customers
-                    .map(Customer::getIncome)
-                    .reduce(Integer::sum)
-                    .orElse(-1) / suitable_customers_count;
-            int max_income = suitable_customers
-                    .map(Customer::getIncome)
-                    .reduce(Integer::max)
-                    .orElse(-1);
-
-            System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers_count));
-            System.out.println("Средний возвраст " + String.valueOf(middle_age));
-            System.out.println("Средний доход " + String.valueOf(middle_income));
-            System.out.println("Максимальный доход " + String.valueOf(max_income));
-        }
+        System.out.println("Информация для женщин: ");
+        printInfoFor(suitable_customers_by_age.filter(customer -> customer.getSex() == Sex.FEMALE));
+        System.out.println("Информация для мужчин: ");
+        printInfoFor(suitable_customers_by_age.filter(customer -> customer.getSex() == Sex.MALE));
     }
 }
