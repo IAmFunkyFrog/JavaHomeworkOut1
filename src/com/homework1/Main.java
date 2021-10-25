@@ -86,6 +86,7 @@ public class Main {
 
         System.out.println("Информация для женщин: ");
         printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.FEMALE).toArray(Customer[]::new));
+        System.out.println();
         System.out.println("Информация для мужчин: ");
         printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.MALE).toArray(Customer[]::new));
     }
