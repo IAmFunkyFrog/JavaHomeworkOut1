@@ -21,22 +21,21 @@ public class Main {
         }
     }
 
-    private static void printInfoFor(Stream<Customer> suitable_customers) {
-        int suitable_customers_count = suitable_customers.map(x -> 1).reduce(Integer::sum).orElse(0);
-        int middle_age = suitable_customers
+    private static void printInfoFor(Customer[] suitable_customers) {
+        int middle_age = Arrays.stream(suitable_customers)
                 .map(Customer::getAge)
                 .reduce(Integer::sum)
-                .orElse(-1) / suitable_customers_count;
-        int middle_income = suitable_customers
+                .orElse(-1) / suitable_customers.length;
+        int middle_income = Arrays.stream(suitable_customers)
                 .map(Customer::getIncome)
                 .reduce(Integer::sum)
-                .orElse(-1) / suitable_customers_count;
-        int max_income = suitable_customers
+                .orElse(-1) / suitable_customers.length;
+        int max_income = Arrays.stream(suitable_customers)
                 .map(Customer::getIncome)
                 .reduce(Integer::max)
                 .orElse(-1);
 
-        System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers_count));
+        System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers.length));
         System.out.println("Средний возвраст " + String.valueOf(middle_age));
         System.out.println("Средний доход " + String.valueOf(middle_income));
         System.out.println("Максимальный доход " + String.valueOf(max_income));
@@ -64,10 +63,6 @@ public class Main {
         try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
             String[] lines = new String[5];
             for(int i = 0;; i++) {
-                String line = fileReader.readLine();
-                if(line == null) break;
-                else lines[i % 5] = line;
-
                 if(i % 5 == 0 && i > 0) customerList.add(new Customer(
                         Integer.parseInt(lines[0]),
                         stringToSex(lines[1]),
@@ -75,18 +70,23 @@ public class Main {
                         Integer.parseInt(lines[3]),
                         Integer.parseInt(lines[4])
                 ));
+
+                String line = fileReader.readLine();
+                if(line == null) break;
+                else lines[i % 5] = line;
             }
         } catch(Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
 
-        Stream<Customer> suitable_customers_by_age = customerList.stream()
-                .filter(customer -> customer.getAge() > age_from && customer.getAge() < age_to);
+        Customer[] suitable_customers_by_age = customerList.stream()
+                .filter(customer -> customer.getAge() > age_from && customer.getAge() < age_to)
+                .toArray(Customer[]::new);
 
         System.out.println("Информация для женщин: ");
-        printInfoFor(suitable_customers_by_age.filter(customer -> customer.getSex() == Sex.FEMALE));
+        printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.FEMALE).toArray(Customer[]::new));
         System.out.println("Информация для мужчин: ");
-        printInfoFor(suitable_customers_by_age.filter(customer -> customer.getSex() == Sex.MALE));
+        printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.MALE).toArray(Customer[]::new));
     }
 }
