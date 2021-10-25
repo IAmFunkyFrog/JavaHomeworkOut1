@@ -3,94 +3,87 @@ package com.homework1;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
 
-    private static Sex stringToSex(String string) throws IllegalArgumentException {
+    private static Sex stringToSex(String string) {
         switch (string) {
             case "Male":
                 return Sex.MALE;
             case "Female":
                 return Sex.FEMALE;
-            default:
-                throw new IllegalArgumentException("Неизвестный пол");
         }
+        return null;
     }
 
-    private static void printInfoFor(Customer[] suitable_customers) {
-        if(suitable_customers.length == 0) {
+    private static void printInfoFor(List<Customer> suitable_customers) {
+        if (suitable_customers.size() == 0) {
             System.out.println("Не найдено подходящих покупателей");
             return;
         }
 
-        int middle_age = Arrays.stream(suitable_customers)
-                .map(Customer::getAge)
-                .reduce(Integer::sum)
-                .orElse(-1) / suitable_customers.length;
-        int middle_income = Arrays.stream(suitable_customers)
-                .map(Customer::getIncome)
-                .reduce(Integer::sum)
-                .orElse(-1) / suitable_customers.length;
-        int max_income = Arrays.stream(suitable_customers)
-                .map(Customer::getIncome)
-                .reduce(Integer::max)
-                .orElse(-1);
+        int middle_age = 0;
+        int middle_income = 0;
+        int max_income = Integer.MIN_VALUE;
+        for(Customer customer : suitable_customers)  {
+            middle_age += customer.getAge();
+            middle_income += customer.getIncome();
+            max_income = Integer.max(max_income, customer.getIncome());
+        }
+        middle_age /= suitable_customers.size();
+        middle_income /= suitable_customers.size();
 
-        System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers.length));
+        System.out.println("Подходящих покупателей найдено " + String.valueOf(suitable_customers.size()));
         System.out.println("Средний возвраст " + String.valueOf(middle_age));
         System.out.println("Средний доход " + String.valueOf(middle_income));
         System.out.println("Максимальный доход " + String.valueOf(max_income));
     }
 
-    public static void main(String[] args) {
-	    int age_from = Arrays.stream(args)
-                .filter(str -> str.startsWith("--from="))
-                .map(str -> Integer.parseInt(str.split("=")[1]))
-                .findFirst()
-                .orElse(Integer.MIN_VALUE);
-        int age_to = Arrays.stream(args)
-                .filter(str -> str.startsWith("--to="))
-                .map(str -> Integer.parseInt(str.split("=")[1]))
-                .findFirst()
-                .orElse(Integer.MAX_VALUE);
-        String filename = Arrays.stream(args)
-                .filter(str -> str.startsWith("--filename="))
-                .map(str -> str.split("=")[1])
-                .findFirst()
-                .orElse("data_customers.txt");
+    public static void main(String[] args) throws Exception {
+        int age_from = Integer.MIN_VALUE;
+        int age_to = Integer.MAX_VALUE;
+        String filename = "data_customers.txt";
+
+        if (args.length > 0) age_from = Integer.parseInt(args[0]);
+        if (args.length > 1) age_to = Integer.parseInt(args[1]);
 
         ArrayList<Customer> customerList = new ArrayList<Customer>();
         File file = new File(filename);
-        try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
-            String[] lines = new String[5];
-            for(int i = 0;; i++) {
-                if(i % 5 == 0 && i > 0) customerList.add(new Customer(
-                        Integer.parseInt(lines[0]),
-                        stringToSex(lines[1]),
-                        Integer.parseInt(lines[2]),
-                        Integer.parseInt(lines[3]),
-                        Integer.parseInt(lines[4])
-                ));
+        BufferedReader fileReader = new BufferedReader(new FileReader(file));
+        String[] lines = new String[5];
+        for (int i = 0; ; i++) {
+            if (i % 5 == 0 && i > 0) customerList.add(new Customer(
+                    Integer.parseInt(lines[0]),
+                    stringToSex(lines[1]),
+                    Integer.parseInt(lines[2]),
+                    Integer.parseInt(lines[3]),
+                    Integer.parseInt(lines[4])
+            ));
 
-                String line = fileReader.readLine();
-                if(line == null) break;
-                else lines[i % 5] = line;
-            }
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            String line = fileReader.readLine();
+            if (line == null) break;
+            else lines[i % 5] = line;
         }
 
-        Customer[] suitable_customers_by_age = customerList.stream()
-                .filter(customer -> customer.getAge() > age_from && customer.getAge() < age_to)
-                .toArray(Customer[]::new);
+        ArrayList<Customer> suitable_customers_female = new ArrayList<Customer>();
+        ArrayList<Customer> suitable_customers_male = new ArrayList<Customer>();
+
+        for (Customer customer : customerList) {
+            if (customer.getAge() > age_from && customer.getAge() < age_to) {
+                if (customer.getSex() == Sex.FEMALE) suitable_customers_female.add(customer);
+                else suitable_customers_male.add(customer);
+            }
+        }
 
         System.out.println("Информация для женщин: ");
-        printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.FEMALE).toArray(Customer[]::new));
+        printInfoFor(suitable_customers_female);
         System.out.println();
         System.out.println("Информация для мужчин: ");
-        printInfoFor(Arrays.stream(suitable_customers_by_age).filter(customer -> customer.getSex() == Sex.MALE).toArray(Customer[]::new));
+        printInfoFor(suitable_customers_male);
     }
 }
