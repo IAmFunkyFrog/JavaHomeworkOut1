@@ -22,6 +22,11 @@ public class Main {
     }
 
     private static void printInfoFor(Customer[] suitable_customers) {
+        if(suitable_customers.length == 0) {
+            System.out.println("Не найдено подходящих покупателей");
+            return;
+        }
+
         int middle_age = Arrays.stream(suitable_customers)
                 .map(Customer::getAge)
                 .reduce(Integer::sum)
